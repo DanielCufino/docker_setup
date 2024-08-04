@@ -1,0 +1,13 @@
+luigi==3.0.1
+pyspark
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+jupyter
+torch
+tensorflow
+keras
+h5py
+psycopg2-binary

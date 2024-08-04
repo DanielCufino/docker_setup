@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  dataenv:
+    build:
+      context: .
+      dockerfile: Dockerfile.dataenv
+    container_name: dataenv
+    volumes:
+      - ./dataenv:/app
+    ports:
+      - "8888:8888"
+    depends_on:
+      - db
+    command: /bin/bash
+
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+
+  db:
+    image: postgres:latest
+    container_name: postgresdb
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+
+  airflow:
+    image: puckel/docker-airflow:latest
+    container_name: airflow
+    ports:
+      - "8080:8080"
+    environment:
+      - LOAD_EX=y
+      - EXECUTOR=SequentialExecutor
+    depends_on:
+      - db
+    volumes:
+      - ./airflow:/usr/local/airflow
