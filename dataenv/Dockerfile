@@ -8,22 +8,22 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     git \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python build dependencies
-RUN pip install --upgrade pip setuptools wheel
-
-# Copy requirements.txt into the container
-COPY requirements.txt /app/requirements.txt
-
-# Install Python packages
-RUN pip install -r /app/requirements.txt
-
-# Create a working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy your project code into the container
-COPY . /app
+# Copy requirements.txt into the container
+COPY requirements.txt .
+
+# Install AWS CLI and Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install awscli && \
+    pip install -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
 
 # Default command to keep the container running as an interactive shell
 CMD ["tail", "-f", "/dev/null"]
