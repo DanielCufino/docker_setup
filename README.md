@@ -1,13 +1,13 @@
+
 # Docker Setup for Data Processing and Jupyter Notebooks
 
 This repository contains the Docker setup for running Luigi pipelines, PySpark, machine learning/deep learning code, and Jupyter notebooks, along with a PostgreSQL database.
 
 ## Services
 
-- **dataenv**: The main data processing environment.
+- **dataenv**: The main data processing environment. Starts with a long-running process to act as an always-active shell.
 - **jupyter**: Jupyter notebook server.
 - **db**: PostgreSQL database.
-- **airflow**: Apache Airflow for pipeline orchestration.
 
 ## Usage
 
@@ -17,15 +17,39 @@ This repository contains the Docker setup for running Luigi pipelines, PySpark, 
    docker-compose up --build
    ```
 
-2. **Access the Jupyter Notebook**:
+2. **Access the dataenv container**:
 
-   Navigate to `http://<your-ec2-public-dns>:8888` in your web browser. Use the token provided in the Jupyter logs.
+   ```sh
+   docker exec -it dataenv /bin/bash
+   ```
 
-3. **Access Airflow**:
+3. **Access the Jupyter Notebook**:
 
-   Navigate to `http://<your-ec2-public-dns>:8080` in your web browser.
+   Navigate to [http://localhost:8888](http://localhost:8888) in your web browser. Use the token provided in the Jupyter logs.
+
+4. **Set up the cron job to update containers at 3 AM daily**:
+
+   a. Create the configuration file `config/project_path.conf` with the following content:
+
+      ```sh
+      PROJECT_PATH=/path/to/your-project
+      ```
+
+   b. Run the setup script to install the cron job:
+
+      ```sh
+      ./scripts/setup_cron.sh
+      ```
+
+   c. For macOS users, you might need to manually restart the cron service:
+
+      ```sh
+      sudo launchctl unload /System/Library/LaunchDaemons/com.apple.periodic-daily.plist
+      sudo launchctl load /System/Library/LaunchDaemons/com.apple.periodic-daily.plist
+      ```
 
 ## Notes
 
-- The `dataenv` container starts with a bash shell. You can manually start Jupyter notebooks or other commands as needed.
-- Ensure you have sufficient resources on your EC2 instance to run all the containers.
+- The `dataenv` container starts with a long-running process, allowing you to interact with it as an always-active shell.
+- Ensure you have sufficient resources on your computer to run all the containers.
+- Logs for the update script can be found in `logs/update_containers.log`.

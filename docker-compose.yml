@@ -3,19 +3,19 @@ version: '3.8'
 services:
   dataenv:
     build:
-      context: .
-      dockerfile: Dockerfile.dataenv
+      context: ./dataenv
+      dockerfile: Dockerfile
     container_name: dataenv
     volumes:
-      - ./dataenv:/app
-    ports:
-      - "8888:8888"
+      - ./dataenv/app:/app
     depends_on:
       - db
-    command: /bin/bash
+    command: tail -f /dev/null
 
   jupyter:
-    image: jupyter/scipy-notebook:latest
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
     container_name: jupyter
     volumes:
       - ./notebooks:/home/jovyan/work
@@ -33,16 +33,8 @@ services:
       POSTGRES_DB: mydatabase
     ports:
       - "5432:5432"
-
-  airflow:
-    image: puckel/docker-airflow:latest
-    container_name: airflow
-    ports:
-      - "8080:8080"
-    environment:
-      - LOAD_EX=y
-      - EXECUTOR=SequentialExecutor
-    depends_on:
-      - db
     volumes:
-      - ./airflow:/usr/local/airflow
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

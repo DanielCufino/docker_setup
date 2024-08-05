@@ -5,7 +5,6 @@ numpy
 scikit-learn
 matplotlib
 seaborn
-jupyter
 torch
 tensorflow
 keras
