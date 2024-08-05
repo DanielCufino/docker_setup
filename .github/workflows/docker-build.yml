@@ -3,7 +3,7 @@ name: Build and Push Docker Images
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'dataenv/**'
       - 'jupyter/**'
@@ -11,7 +11,7 @@ on:
       - 'docker-compose.yml'
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - 'dataenv/**'
       - 'jupyter/**'
