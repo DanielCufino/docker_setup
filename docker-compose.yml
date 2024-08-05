@@ -18,11 +18,9 @@ services:
       dockerfile: Dockerfile
     container_name: jupyter
     volumes:
-      - ./notebooks:/home/jupyter/work
+      - ./notebooks:/home/jovyan/work
     ports:
       - "8888:8888"
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
 
   db:
     image: postgres:latest
