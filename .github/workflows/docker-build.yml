@@ -5,22 +5,25 @@ on:
     branches:
       - master
     paths:
-      - 'dataenv/**'
-      - 'jupyter/**'
-      - 'db/**'
-      - 'docker-compose.yml'
+        - 'dataenv/**'
+        - 'jupyter/**'
+        - 'db/**'
+        - 'docker-compose.yml'
   pull_request:
     branches:
       - master
     paths:
-      - 'dataenv/**'
-      - 'jupyter/**'
-      - 'db/**'
-      - 'docker-compose.yml'
+        - 'dataenv/**'
+        - 'jupyter/**'
+        - 'db/**'
+        - 'docker-compose.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency: 
+      group: build-and-push
+      cancel-in-progress: true
 
     env:
       DOCKER_BUILDKIT: 1
@@ -29,10 +32,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Clean up Docker system
+      - name: Clean up space before build
         run: |
-          docker system prune -f
-          docker volume prune -f
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android/sdk
+          sudo rm -rf /usr/local/lib/node_modules
+          docker system prune -af --volumes
+          docker builder prune -af
+          df -h
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -42,20 +54,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Set up .env file
-        run: |
-          echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
-          echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
-          echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env
 
       - name: Build and push dataenv image
         uses: docker/build-push-action@v3
