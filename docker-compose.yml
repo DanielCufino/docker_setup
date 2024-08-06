@@ -21,6 +21,8 @@ services:
         limits:
           cpus: '2.00'
           memory: 2048M
+    networks:
+      - app-network
 
   jupyter:
     build:
@@ -38,6 +40,8 @@ services:
         limits:
           cpus: '2.00'
           memory: 2048M
+    networks:
+      - app-network
 
   db:
     image: postgres:latest
@@ -56,6 +60,13 @@ services:
         limits:
           cpus: '2.00'
           memory: 2048M
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   datadog:
     image: gcr.io/datadoghq/agent:7
@@ -75,6 +86,12 @@ services:
         limits:
           cpus: '1.00'
           memory: 1024M
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
