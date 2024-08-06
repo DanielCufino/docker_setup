@@ -5,22 +5,22 @@ on:
     branches:
       - master
     paths:
-        - 'dataenv/**'
-        - 'jupyter/**'
-        - 'db/**'
-        - 'docker-compose.yml'
+      - 'dataenv/**'
+      - 'jupyter/**'
+      - 'db/**'
+      - 'docker-compose.yml'
   pull_request:
     branches:
       - master
     paths:
-        - 'dataenv/**'
-        - 'jupyter/**'
-        - 'db/**'
-        - 'docker-compose.yml'
+      - 'dataenv/**'
+      - 'jupyter/**'
+      - 'db/**'
+      - 'docker-compose.yml'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Use self-hosted runner
     concurrency: 
       group: build-and-push
       cancel-in-progress: true
@@ -31,20 +31,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Clean up space before build
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-          sudo apt-get clean
-          sudo rm -rf /var/lib/apt/lists/*
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/lib/android/sdk
-          sudo rm -rf /usr/local/lib/node_modules
-          docker system prune -af --volumes
-          docker builder prune -af
-          df -h
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
