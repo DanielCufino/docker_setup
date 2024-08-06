@@ -5,10 +5,8 @@ USER root
 # Set the working directory
 WORKDIR /home/jovyan/work
 
-# Copy requirements.txt into the container
+# Copy requirements.txt and install dependencies
 COPY requirements.txt /tmp/
-
-# Install AWS CLI and additional Python packages
 RUN pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt
 

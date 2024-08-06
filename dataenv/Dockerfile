@@ -1,4 +1,5 @@
-FROM python:3.9-buster
+# Use multi-stage builds to reduce the image size
+FROM python:3.9-buster AS builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -8,19 +9,26 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     git \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+    unzip
 
 # Set the working directory
 WORKDIR /app
 
-# Copy requirements.txt into the container
+# Copy requirements.txt and install dependencies
 COPY requirements.txt .
-
-# Install AWS CLI and Python dependencies
 RUN pip install --upgrade pip setuptools wheel && \
     pip install awscli && \
     pip install -r requirements.txt
+
+# Final stage
+FROM python:3.9-buster
+
+# Copy installed dependencies from the builder stage
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/bin/aws /usr/local/bin/aws
+
+# Set the working directory
+WORKDIR /app
 
 # Copy the rest of the application code
 COPY . .
