@@ -82,3 +82,4 @@ jobs:
           context: ./db
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/db:latest
+          
