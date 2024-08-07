@@ -72,7 +72,7 @@ This repository contains the Docker setup for running Luigi pipelines, PySpark, 
    a. Create the configuration file `config/project_path.conf` with the following content:
 
       ```sh
-      PROJECT_PATH=/Users/danielcufino/Desktop/projects/docker_setup
+      PROJECT_PATH=/your/path/here
       IMAGES_LIST=dockerhub_username/dataenv:latest,dockerhub_username/jupyter:latest,dockerhub_username/db:latest
       ```
 
