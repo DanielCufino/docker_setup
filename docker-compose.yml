@@ -1,89 +1,97 @@
-name: Build and Push Docker Images
+version: '3.8'
 
-on:
-  push:
-    branches:
-      - master
-    paths:
-        - 'dataenv/**'
-        - 'jupyter/**'
-        - 'db/**'
-        - 'docker-compose.yml'
-  pull_request:
-    branches:
-      - master
-    paths:
-        - 'dataenv/**'
-        - 'jupyter/**'
-        - 'db/**'
-        - 'docker-compose.yml'
-  workflow_dispatch:  # Manual trigger
+services:
+  dataenv:
+    build:
+      context: ./dataenv
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
+    container_name: dataenv
+    volumes:
+      - ./dataenv/app:/app
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2048M
+    networks:
+      - app-network
 
-jobs:
-  setup:
-    runs-on: self-hosted
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  jupyter:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
+    container_name: jupyter
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    ports:
+      - "8888:8888"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2048M
+    networks:
+      - app-network
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver: docker-container
+  db:
+    image: postgres:latest
+    container_name: postgresdb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2048M
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+  datadog:
+    image: gcr.io/datadoghq/agent:7
+    container_name: dd-agent
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=${DD_SITE}
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1024M
+    networks:
+      - app-network
 
-      - name: Prepare cache directory
-        run: mkdir -p /tmp/.buildx-cache
+volumes:
+  postgres_data:
 
-  build_dataenv:
-    runs-on: self-hosted
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Build and push dataenv image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./dataenv
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/dataenv:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-
-  build_jupyter:
-    runs-on: self-hosted
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Build and push jupyter image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./jupyter
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/jupyter:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-
-  build_db:
-    runs-on: self-hosted
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Build and push db image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./db
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/db:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+networks:
+  app-network:
+    driver: bridge
