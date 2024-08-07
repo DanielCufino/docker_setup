@@ -5,18 +5,18 @@ on:
     branches:
       - master
     paths:
-        - 'dataenv/**'
-        - 'jupyter/**'
-        - 'db/**'
-        - 'docker-compose.yml'
+      - 'dataenv/**'
+      - 'jupyter/**'
+      - 'db/**'
+      - 'docker-compose.yml'
   pull_request:
     branches:
       - master
     paths:
-        - 'dataenv/**'
-        - 'jupyter/**'
-        - 'db/**'
-        - 'docker-compose.yml'
+      - 'dataenv/**'
+      - 'jupyter/**'
+      - 'db/**'
+      - 'docker-compose.yml'
   workflow_dispatch:  # Manual trigger
 
 jobs:
