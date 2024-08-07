@@ -1,4 +1,3 @@
-```markdown
 # Docker Setup for Data Processing and Jupyter Notebooks
 
 This repository contains the Docker setup for running Luigi pipelines, PySpark, machine learning/deep learning code, and Jupyter notebooks, along with a PostgreSQL database.
@@ -107,4 +106,3 @@ This repository contains the Docker setup for running Luigi pipelines, PySpark, 
 - The `dataenv` container starts with a long-running process, allowing you to interact with it as an always-active shell.
 - Ensure you have sufficient resources on your computer to run all the containers.
 - Ensure the `.env` file contains your Datadog API key and site information for monitoring.
-```
